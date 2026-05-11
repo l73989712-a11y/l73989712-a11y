@@ -1,25 +1,30 @@
 name: Generate Contribution Snake
 on:
   schedule:
-    - cron: "0 0 * * *" # 每天自动更新一次
+    - cron: "0 0 * * *"
   workflow_dispatch:
   push:
     branches: ["main"]
 
 jobs:
-  build:
+  generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate Snake
+      - name: 拉取仓库代码
+        uses: actions/checkout@v4
+
+      - name: 生成贪吃蛇SVG
         uses: Platane/snk/svg-only@v3
         with:
           github_user_name: l73989712-a11y
-          outputs: |
-            dist/snake.svg?palette=github-dark
-      
-      - name: Push Snake to Repo
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
-          directory: dist
+          outputs: snake.svg?palette=github-dark
+
+      - name: 提交并推送图片
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git add snake.svg
+          git commit -m "Update snake animation" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
